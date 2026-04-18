@@ -1,22 +1,52 @@
-name: Deploy to GitHub Pages
+name: Fetch Market Data & Deploy
+
 on:
-  push:
-    branches: [ main ]
+  schedule:
+    # Runs at 06:00 UTC every day (after US markets close previous day, before EU open)
+    - cron: '0 6 * * *'
+  workflow_dispatch:   # Allow manual trigger from GitHub Actions tab
+
 permissions:
-  contents: read
+  contents: write      # Needed to commit JSON files back to repo
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  fetch-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch all market data
+        run: |
+          python scripts/fetch_data.py
+        
+      - name: Commit updated data files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Market Terminal Bot"
+          git add data/
+          git diff --staged --quiet || git commit -m "📊 Daily data update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
+        
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-      - uses: actions/deploy-pages@v4
+
+      - name: Deploy to GitHub Pages
         id: deployment
+        uses: actions/deploy-pages@v4
