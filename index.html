@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MARKET TERMINAL</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="terminal-header">
+    <div class="header-left">
+      <span class="logo">▐ MARKET TERMINAL</span>
+      <span class="version">v3.0</span>
+    </div>
+    <div class="header-center">
+      <div class="ticker-bar" id="tickerBar">Loading market data…</div>
+    </div>
+    <div class="header-right">
+      <span class="data-age" id="dataAge"></span>
+      <span id="clock" class="clock"></span>
+    </div>
+  </header>
+
+  <!-- NAV TABS -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="overview">◈ OVERVIEW</button>
+    <button class="tab-btn" data-tab="stocks">▸ EQUITIES</button>
+    <button class="tab-btn" data-tab="crypto">◆ CRYPTO</button>
+    <button class="tab-btn" data-tab="metals">◉ METALS</button>
+    <button class="tab-btn" data-tab="screener">⊞ SCREENER</button>
+  </nav>
+
+  <main class="terminal-main">
+
+    <!-- ===== OVERVIEW ===== -->
+    <section id="tab-overview" class="tab-section active">
+      <div class="overview-grid" id="overviewCards"></div>
+      <div class="overview-bottom">
+        <div class="panel panel-chart">
+          <div class="panel-title">S&P 500 — FULL HISTORY (MONTHLY)</div>
+          <div style="height:280px;position:relative;"><canvas id="ovChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">TOP CRYPTO MOVERS — 24H</div>
+          <div id="cryptoMovers" class="movers-list">Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== STOCKS ===== -->
+    <section id="tab-stocks" class="tab-section">
+      <div class="stocks-toolbar">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="stockSearch" placeholder="Search symbol or company…" oninput="filterStocks()" />
+        </div>
+        <div class="sector-filters" id="sectorFilters"></div>
+      </div>
+      <div class="stocks-layout">
+        <div class="stocks-list-panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('stocks','symbol')">SYMBOL ⇅</th>
+                <th onclick="sortTable('stocks','name')">NAME ⇅</th>
+                <th onclick="sortTable('stocks','price')">PRICE ⇅</th>
+                <th onclick="sortTable('stocks','change')">1D% ⇅</th>
+                <th onclick="sortTable('stocks','sector')">SECTOR ⇅</th>
+                <th onclick="sortTable('stocks','pe')">P/E ⇅</th>
+                <th onclick="sortTable('stocks','mktcap')">MKT CAP ⇅</th>
+                <th onclick="sortTable('stocks','high52')">52W HIGH ⇅</th>
+                <th onclick="sortTable('stocks','low52')">52W LOW ⇅</th>
+                <th onclick="sortTable('stocks','divYield')">DIV% ⇅</th>
+                <th onclick="sortTable('stocks','eps')">EPS ⇅</th>
+              </tr>
+            </thead>
+            <tbody id="stocksBody">
+              <tr><td colspan="11" class="loading-cell">Loading stock data…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stock-detail-panel" id="stockDetailPanel">
+          <div class="detail-placeholder">
+            <span>SELECT A STOCK</span>
+            <span class="detail-hint">Click any row to view chart & stats</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CRYPTO ===== -->
+    <section id="tab-crypto" class="tab-section">
+      <div class="stocks-toolbar">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="cryptoSearch" placeholder="Search coin…" oninput="filterCrypto()" />
+        </div>
+        <div class="page-controls">
+          <span class="page-info" id="cryptoPageInfo">Showing all</span>
+          <button class="page-btn" onclick="cryptoPageChange(-1)">◀</button>
+          <button class="page-btn" onclick="cryptoPageChange(1)">▶</button>
+        </div>
+      </div>
+      <div class="stocks-layout">
+        <div class="stocks-list-panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('crypto','market_cap_rank')"># ⇅</th>
+                <th>COIN</th>
+                <th onclick="sortTable('crypto','current_price')">PRICE ⇅</th>
+                <th onclick="sortTable('crypto','price_change_percentage_24h')">24H% ⇅</th>
+                <th onclick="sortTable('crypto','price_change_percentage_7d_in_currency')">7D% ⇅</th>
+                <th onclick="sortTable('crypto','price_change_percentage_30d_in_currency')">30D% ⇅</th>
+                <th onclick="sortTable('crypto','market_cap')">MKT CAP ⇅</th>
+                <th onclick="sortTable('crypto','total_volume')">VOL 24H ⇅</th>
+                <th onclick="sortTable('crypto','ath')">ATH ⇅</th>
+                <th onclick="sortTable('crypto','circulating_supply')">SUPPLY ⇅</th>
+              </tr>
+            </thead>
+            <tbody id="cryptoBody">
+              <tr><td colspan="10" class="loading-cell">Loading crypto data…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stock-detail-panel" id="cryptoDetailPanel">
+          <div class="detail-placeholder">
+            <span>SELECT A COIN</span>
+            <span class="detail-hint">Click any row to view chart & stats</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== METALS ===== -->
+    <section id="tab-metals" class="tab-section">
+      <div class="metals-grid" id="metalsGrid"></div>
+      <div class="metals-detail">
+        <div class="panel-title" id="metalChartTitle">SELECT A METAL ABOVE</div>
+        <div class="range-btns" id="metalRangeBtns" style="margin-bottom:1rem;">
+          <button class="range-btn active" onclick="setMetalRange('1Y',this)">1Y</button>
+          <button class="range-btn" onclick="setMetalRange('5Y',this)">5Y</button>
+          <button class="range-btn" onclick="setMetalRange('10Y',this)">10Y</button>
+          <button class="range-btn" onclick="setMetalRange('20Y',this)">20Y</button>
+          <button class="range-btn" onclick="setMetalRange('MAX',this)">MAX (~26Y)</button>
+        </div>
+        <div style="height:320px;position:relative;"><canvas id="metalChart"></canvas></div>
+        <div class="metal-stats-row" id="metalStatsRow"></div>
+      </div>
+    </section>
+
+    <!-- ===== SCREENER ===== -->
+    <section id="tab-screener" class="tab-section">
+      <div class="panel-title" style="margin-bottom:0.5rem;">MARKET SCREENER — ALL ASSETS</div>
+      <div class="screener-filters">
+        <label>Asset Class
+          <select id="sc-class" onchange="runScreener()">
+            <option value="all">All</option>
+            <option value="stocks">Stocks</option>
+            <option value="crypto">Crypto</option>
+            <option value="metals">Metals</option>
+          </select>
+        </label>
+        <label>Min Price ($)
+          <input type="number" id="sc-minprice" placeholder="0" oninput="runScreener()" />
+        </label>
+        <label>Max Price ($)
+          <input type="number" id="sc-maxprice" placeholder="∞" oninput="runScreener()" />
+        </label>
+        <label>Min 24h Change (%)
+          <input type="number" id="sc-minchg" placeholder="-100" oninput="runScreener()" />
+        </label>
+        <label>Max 24h Change (%)
+          <input type="number" id="sc-maxchg" placeholder="100" oninput="runScreener()" />
+        </label>
+        <label>Sector (stocks)
+          <select id="sc-sector" onchange="runScreener()">
+            <option value="">All sectors</option>
+          </select>
+        </label>
+        <label>Sort By
+          <select id="sc-sort" onchange="runScreener()">
+            <option value="mktcap">Market Cap ↓</option>
+            <option value="change">24h Change ↓</option>
+            <option value="price">Price ↓</option>
+          </select>
+        </label>
+        <button class="export-btn" onclick="exportCSV()">⬇ EXPORT CSV</button>
+      </div>
+      <div class="screener-count" id="screenerCount"></div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="screenerTable">
+          <thead>
+            <tr><th>ASSET</th><th>TYPE</th><th>SECTOR</th><th>PRICE</th><th>24H%</th><th>7D%</th><th>MKT CAP</th><th>P/E</th></tr>
+          </thead>
+          <tbody id="screenerBody">
+            <tr><td colspan="8" class="loading-cell">Load data from other tabs first.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
